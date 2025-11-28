@@ -1,0 +1,21 @@
+# InFlux Project
+
+## Main README
+node_modules/
+.next/
+dist/
+build/
+*.log
+.env
+.env.local
+.env*.local
+.DS_Store
+*.db
+*.sqlite3
+__pycache__/
+*.pyc
+venv/
+.venv/
+*.egg-info/
+.pytest_cache/
+.coverage

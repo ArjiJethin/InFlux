@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: influx-postgres
+    environment:
+      POSTGRES_USER: influx_user
+      POSTGRES_PASSWORD: influx_password
+      POSTGRES_DB: influx
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - influx-network
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: influx-backend
+    environment:
+      DATABASE_URL: postgresql://influx_user:influx_password@postgres:5432/influx
+      ENVIRONMENT: development
+      API_HOST: 0.0.0.0
+      API_PORT: 8000
+      CORS_ORIGINS: '["http://localhost:3000"]'
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+    volumes:
+      - ./backend:/app
+      - backend_models:/app/models
+      - backend_uploads:/app/uploads
+    networks:
+      - influx-network
+
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: influx-frontend
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - influx-network
+
+volumes:
+  postgres_data:
+  backend_models:
+  backend_uploads:
+
+networks:
+  influx-network:
+    driver: bridge
