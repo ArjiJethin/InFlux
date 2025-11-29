@@ -101,7 +101,7 @@ export default function LoginPage() {
           {/* Mini Stats */}
           <div className="grid grid-cols-3 gap-4 xl:gap-6 mb-12">
             <div className="bg-[#0d1221]/50 backdrop-blur-xl rounded-2xl p-4 xl:p-6 border border-white/5 hover:border-[#22c55e]/30 transition-all duration-500 hover:scale-105 hover:shadow-[0_0_40px_rgba(34,197,94,0.2)] animate-fadeSlideUp">
-              <p className="text-[#6b7b94] text-xs xl:text-sm mb-2">Today's Forecast</p>
+              <p className="text-[#6b7b94] text-xs xl:text-sm mb-2">Today&apos;s Forecast</p>
               <p className="text-white text-2xl xl:text-3xl font-bold">32,4 <span className="text-sm xl:text-lg font-normal">kWh</span></p>
             </div>
             <div className="bg-[#0d1221]/50 backdrop-blur-xl rounded-2xl p-4 xl:p-6 border border-white/5 hover:border-[#22c55e]/30 transition-all duration-500 hover:scale-105 hover:shadow-[0_0_40px_rgba(34,197,94,0.2)] animate-fadeSlideUp delay-100">

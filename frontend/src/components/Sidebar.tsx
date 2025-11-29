@@ -123,7 +123,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen = false, onMob
                 <Leaf className="w-4 h-4 text-[#34d399]" />
               </div>
               <div>
-                <h3 className="text-white font-semibold text-sm mb-1">Today's Tip</h3>
+                <h3 className="text-white font-semibold text-sm mb-1">Today&apos;s Tip</h3>
                 <p className="text-[#6b7b94] text-xs leading-relaxed">
                   Unplug devices when not un use to save energy
                 </p>

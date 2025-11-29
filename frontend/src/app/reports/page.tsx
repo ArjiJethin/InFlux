@@ -412,7 +412,7 @@ export default function ReportsPage() {
 
             <div className="text-center mt-8">
               <span className="text-emerald-400 text-5xl font-bold">6,7%</span>
-              <sup className="text-emerald-400 text-2xl font-bold">'</sup>
+              <sup className="text-emerald-400 text-2xl font-bold">&apos;</sup>
             </div>
           </div>
 

@@ -18,7 +18,7 @@ export default function MetricCards({ data }: MetricCardsProps) {
     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
       {/* Today's Consumption */}
       <div className="group bg-[#141b2e]/50 backdrop-blur-xl rounded-xl p-4 sm:p-5 border border-white/5 hover:border-emerald-400/40 hover:shadow-[0_8px_24px_rgba(52,211,153,0.15)] transition-all duration-500 hover:scale-[1.01]">
-        <h3 className="text-[#6b7b94] text-xs sm:text-sm mb-3">Today's Consumption</h3>
+        <h3 className="text-[#6b7b94] text-xs sm:text-sm mb-3">Today&apos;s Consumption</h3>
         <div className="flex items-baseline gap-1 mb-2">
           <span className="text-2xl sm:text-3xl font-bold text-white">{todayConsumption.toFixed(1)}</span>
           <span className="text-xs sm:text-sm text-[#6b7b94]">kWh</span>
