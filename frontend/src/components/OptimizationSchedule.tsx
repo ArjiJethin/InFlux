@@ -1,12 +1,15 @@
 'use client'
 
 import { Leaf } from 'lucide-react'
+import { AIInsightsGenerator } from '@/lib/aiInsights'
 
-export default function OptimizationSchedule() {
-  const schedule = [
-    { start: 3, end: 11, type: 'optimal', label: 'Best time for heavy loads' },
-    { start: 17, end: 20, type: 'warning', label: 'High carbon intensity window' },
-  ]
+interface OptimizationScheduleProps {
+  data?: any
+}
+
+export default function OptimizationSchedule({ data: apiData }: OptimizationScheduleProps) {
+  // Use AI to generate intelligent schedule
+  const schedule = AIInsightsGenerator.generateOptimizationSchedule(apiData)
 
   return (
     <div className="group bg-[#141b2e]/50 backdrop-blur-xl rounded-xl p-4 sm:p-6 border border-white/5 hover:border-emerald-400/40 hover:shadow-[0_8px_24px_rgba(52,211,153,0.15)] transition-all duration-500 hover:scale-[1.01]">
@@ -24,7 +27,7 @@ export default function OptimizationSchedule() {
 
           {/* Timeline bar */}
           <div className="relative h-5 sm:h-6 bg-[#0d1221]/40 rounded-lg overflow-hidden">
-            {schedule.map((slot, index) => (
+            {schedule.map((slot: any, index: number) => (
               <div
                 key={index}
                 className={`absolute h-full ${
@@ -44,7 +47,7 @@ export default function OptimizationSchedule() {
 
       {/* Schedule items */}
       <div className="space-y-3">
-        {schedule.map((slot, index) => (
+        {schedule.map((slot: any, index: number) => (
           <div 
             key={index}
             className={`bg-[#0d1221]/40 flex items-center gap-3 p-2.5 sm:p-3 rounded-lg border hover:bg-[#0d1221]/60 transition-all duration-300 ${

@@ -2,14 +2,20 @@
 
 import { Cell, Pie, PieChart, ResponsiveContainer } from 'recharts'
 
-const data = [
+interface ApplianceBreakdownProps {
+  data?: any
+}
+
+const defaultData = [
   { name: 'AC', value: 40, color: '#22c55e' },
   { name: 'Fridge', value: 20, color: '#34d399' },
   { name: 'Lights', value: 16, color: '#a78bfa' },
   { name: 'Other', value: 24, color: '#1e2837' },
 ]
 
-export default function ApplianceBreakdown() {
+export default function ApplianceBreakdown({ data: apiData }: ApplianceBreakdownProps) {
+  // Use real data if available
+  const chartData = apiData?.appliance_breakdown || defaultData
   return (
     <div className="group bg-[#141b2e]/50 backdrop-blur-xl rounded-xl p-4 sm:p-6 border border-white/5 hover:border-purple-400/40 hover:shadow-[0_8px_24px_rgba(167,139,250,0.15)] transition-all duration-500 hover:scale-[1.01]">
       <h3 className="text-white text-sm sm:text-base font-semibold mb-4 sm:mb-6 text-center">Appliance Breakdown</h3>
@@ -20,7 +26,7 @@ export default function ApplianceBreakdown() {
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
-                data={data}
+                data={chartData}
                 cx="50%"
                 cy="50%"
                 innerRadius={45}
@@ -28,7 +34,7 @@ export default function ApplianceBreakdown() {
                 paddingAngle={2}
                 dataKey="value"
               >
-                {data.map((entry, index) => (
+                {chartData.map((entry: any, index: number) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Pie>
@@ -43,7 +49,7 @@ export default function ApplianceBreakdown() {
 
         {/* Legend */}
         <div className="flex-1 w-full sm:w-auto sm:pl-8 space-y-3">
-          {data.map((item, index) => (
+          {chartData.map((item: any, index: number) => (
             <div key={index} className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div 

@@ -2,6 +2,10 @@
 
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts'
 
+interface EnergyChartProps {
+  data?: any
+}
+
 const generateData = () => {
   const labels = ['4d', '7da', '30h', '48h']
   const data = []
@@ -31,8 +35,9 @@ const CustomTooltip = ({ active, payload }: any) => {
   return null
 }
 
-export default function EnergyChart() {
-  const data = generateData()
+export default function EnergyChart({ data: apiData }: EnergyChartProps) {
+  // Use real data if available, otherwise generate mock data
+  const chartData = apiData?.hourly_forecast || generateData()
 
   return (
     <div className="group bg-[#141b2e]/50 backdrop-blur-xl rounded-xl p-4 sm:p-6 border border-white/5 hover:border-emerald-400/40 hover:shadow-[0_8px_24px_rgba(52,211,153,0.15)] transition-all duration-500 hover:scale-[1.01]">
@@ -46,7 +51,7 @@ export default function EnergyChart() {
 
       <div className="h-48 sm:h-56 lg:h-[280px]">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data}>
+          <AreaChart data={chartData}>
             <defs>
               <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3}/>

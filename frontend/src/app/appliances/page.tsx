@@ -1,10 +1,11 @@
     'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Menu } from 'lucide-react'
 import Sidebar from '@/components/Sidebar'
 import AuthGuard from '@/components/AuthGuard'
 import { Search, Monitor, Lightbulb, Wind, Droplets, Zap, Shirt, UtensilsCrossed, Laptop } from 'lucide-react'
+import { fetchAppliancesData } from '@/lib/api'
 
 interface Appliance {
   id: number
@@ -16,23 +17,87 @@ interface Appliance {
   iconBg: string
 }
 
+// Icon mapping for devices
+const getDeviceIcon = (deviceName: string) => {
+  const name = deviceName.toLowerCase()
+  if (name.includes('ac') || name.includes('fan')) return Wind
+  if (name.includes('light')) return Lightbulb
+  if (name.includes('wash') || name.includes('wm')) return Shirt
+  if (name.includes('water') || name.includes('wh')) return Droplets
+  if (name.includes('micro')) return UtensilsCrossed
+  if (name.includes('laptop') || name.includes('router') || name.includes('tv')) return Monitor
+  if (name.includes('fridge')) return Droplets
+  return Zap
+}
+
+// Icon background gradient
+const getDeviceIconBg = (deviceName: string) => {
+  const name = deviceName.toLowerCase()
+  if (name.includes('ac') || name.includes('fan')) return 'from-blue-500/20 to-cyan-500/20'
+  if (name.includes('light')) return 'from-yellow-500/20 to-amber-500/20'
+  if (name.includes('wash') || name.includes('wm')) return 'from-emerald-500/20 to-teal-500/20'
+  if (name.includes('water') || name.includes('wh')) return 'from-blue-500/20 to-cyan-500/20'
+  if (name.includes('micro')) return 'from-purple-500/20 to-indigo-500/20'
+  if (name.includes('laptop') || name.includes('router') || name.includes('tv')) return 'from-slate-500/20 to-gray-500/20'
+  if (name.includes('fridge')) return 'from-emerald-500/20 to-green-500/20'
+  return 'from-emerald-500/20 to-green-500/20'
+}
+
 export default function AppliancesPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [filter, setFilter] = useState<'all' | 'flexible'>('all')
   const [searchQuery, setSearchQuery] = useState('')
+  const [appliances, setAppliances] = useState<Appliance[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const appliances: Appliance[] = [
-    { id: 1, name: 'AC', location: 'Bedroom', consumption: 4.2, icon: Wind, status: 'flexible', iconBg: 'from-blue-500/20 to-cyan-500/20' },
-    { id: 2, name: 'Washing Machine', location: 'Laundry Room', consumption: 3.1, icon: Shirt, status: 'flexible', iconBg: 'from-emerald-500/20 to-teal-500/20' },
-    { id: 3, name: 'Lights', location: 'Living Room', consumption: 1.8, icon: Lightbulb, status: 'flexible', iconBg: 'from-yellow-500/20 to-amber-500/20' },
-    { id: 4, name: 'EV Charger', location: 'Garage', consumption: 1.6, icon: Zap, status: 'flexible', iconBg: 'from-emerald-500/20 to-green-500/20' },
-    { id: 5, name: 'Dishwasher', location: 'Kitchen', consumption: 1.3, icon: UtensilsCrossed, status: 'flexible', iconBg: 'from-purple-500/20 to-indigo-500/20' },
-    { id: 6, name: 'Computer', location: 'Office', consumption: 0.9, icon: Monitor, status: 'flexible', iconBg: 'from-slate-500/20 to-gray-500/20' },
-    { id: 7, name: 'Water Heater', location: 'Bathroom', consumption: 1.3, icon: Droplets, status: 'flexible', iconBg: 'from-blue-500/20 to-cyan-500/20' },
-    { id: 8, name: 'Dishwasher', location: 'Kitchen', consumption: 0.9, icon: UtensilsCrossed, status: 'flexible', iconBg: 'from-purple-500/20 to-indigo-500/20' },
-    { id: 9, name: 'Computer', location: 'Office', consumption: 0.7, icon: Laptop, status: 'flexible', iconBg: 'from-slate-500/20 to-gray-500/20' },
-  ]
+  useEffect(() => {
+    const loadAppliances = async () => {
+      try {
+        setLoading(true)
+        const data = await fetchAppliancesData()
+        
+        // Transform API data to match component format
+        if (data.devices) {
+          const transformedAppliances: Appliance[] = data.devices.map((device: any, index: number) => ({
+            id: index + 1,
+            name: device.device_id || device.name || 'Unknown Device',
+            location: device.location || 'Unknown',
+            consumption: device.current_consumption || device.avg_consumption || 0,
+            icon: getDeviceIcon(device.device_id || device.name || ''),
+            status: (device.status || 'flexible') as 'flexible' | 'active' | 'standby',
+            iconBg: getDeviceIconBg(device.device_id || device.name || '')
+          }))
+          setAppliances(transformedAppliances)
+        }
+        
+        setError(null)
+      } catch (err: any) {
+        console.error('Failed to fetch appliances data:', err)
+        setError(err.message || 'Failed to load appliances')
+        // Fallback to default appliances
+        setAppliances([
+          { id: 1, name: 'AC', location: 'Bedroom', consumption: 4.2, icon: Wind, status: 'flexible', iconBg: 'from-blue-500/20 to-cyan-500/20' },
+          { id: 2, name: 'Washing Machine', location: 'Laundry Room', consumption: 3.1, icon: Shirt, status: 'flexible', iconBg: 'from-emerald-500/20 to-teal-500/20' },
+          { id: 3, name: 'Lights', location: 'Living Room', consumption: 1.8, icon: Lightbulb, status: 'flexible', iconBg: 'from-yellow-500/20 to-amber-500/20' },
+          { id: 4, name: 'EV Charger', location: 'Garage', consumption: 1.6, icon: Zap, status: 'flexible', iconBg: 'from-emerald-500/20 to-green-500/20' },
+          { id: 5, name: 'Dishwasher', location: 'Kitchen', consumption: 1.3, icon: UtensilsCrossed, status: 'flexible', iconBg: 'from-purple-500/20 to-indigo-500/20' },
+          { id: 6, name: 'Computer', location: 'Office', consumption: 0.9, icon: Monitor, status: 'flexible', iconBg: 'from-slate-500/20 to-gray-500/20' },
+          { id: 7, name: 'Water Heater', location: 'Bathroom', consumption: 1.3, icon: Droplets, status: 'flexible', iconBg: 'from-blue-500/20 to-cyan-500/20' },
+          { id: 8, name: 'Dishwasher', location: 'Kitchen', consumption: 0.9, icon: UtensilsCrossed, status: 'flexible', iconBg: 'from-purple-500/20 to-indigo-500/20' },
+          { id: 9, name: 'Computer', location: 'Office', consumption: 0.7, icon: Laptop, status: 'flexible', iconBg: 'from-slate-500/20 to-gray-500/20' },
+        ])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadAppliances()
+    // Refresh every 5 minutes
+    const interval = setInterval(loadAppliances, 5 * 60 * 1000)
+    return () => clearInterval(interval)
+  }, [])
 
   const filteredAppliances = appliances.filter(appliance => {
     const matchesFilter = filter === 'all' || appliance.status === 'flexible'
@@ -60,10 +125,33 @@ export default function AppliancesPage() {
           <Menu className="w-6 h-6 text-emerald-400" />
         </button>
 
+        {/* Loading State */}
+        {loading && (
+          <div className="flex items-center justify-center py-20">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500"></div>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && (
+          <div className="bg-red-500/10 border border-red-500/50 rounded-xl p-4 mb-6">
+            <p className="text-red-400 text-sm">⚠️ {error}</p>
+            <p className="text-red-300/60 text-xs mt-1">Using cached data. Make sure backend is running.</p>
+          </div>
+        )}
+
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 sm:mb-8 animate-in fade-in slide-in-from-top-4 duration-700">
           <div className="w-full sm:w-auto text-center sm:text-left">
-            <h1 className="text-white text-2xl sm:text-3xl font-bold mb-2">Appliances</h1>
+            <h1 className="text-white text-2xl sm:text-3xl font-bold mb-2 flex items-center gap-2 justify-center sm:justify-start">
+              Appliances 
+              {!loading && !error && (
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+              )}
+            </h1>
           </div>
 
           {/* Search Bar */}

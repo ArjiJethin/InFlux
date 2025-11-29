@@ -1,13 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Menu } from 'lucide-react'
 import Sidebar from '@/components/Sidebar'
 import AuthGuard from '@/components/AuthGuard'
 import { Settings, ChevronDown, Droplets, Shirt, UtensilsCrossed, Zap, ChevronRight } from 'lucide-react'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
+import { fetchDashboardData, fetchAppliancesData } from '@/lib/api'
+import { AIInsightsGenerator } from '@/lib/aiInsights'
 
-// Generate optimization data
+// Generate optimization data (fallback)
 const generateOptimizationData = () => {
   const hours = Array.from({ length: 24 }, (_, i) => i)
   return hours.map(hour => ({
@@ -28,15 +30,68 @@ export default function OptimizationPage() {
   const [autoApply, setAutoApply] = useState(true)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-
-  const data = generateOptimizationData()
-
-  const recommendations = [
+  const [data, setData] = useState(generateOptimizationData())
+  const [recommendations, setRecommendations] = useState([
     { id: 1, icon: Droplets, name: 'Water Heater', shift: 'Shift to 5 - 6 AM', color: 'emerald' },
     { id: 2, icon: Shirt, name: 'Washing Machine', shift: 'Shift to 4 - 6 PM', color: 'emerald' },
     { id: 3, icon: UtensilsCrossed, name: 'Dishwasher', shift: 'Shift to 4 - 6 PM', color: 'emerald' },
     { id: 4, icon: Zap, name: 'EV Charger', shift: 'Shift to 5 - 7 PM', color: 'emerald' },
-  ]
+  ])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const loadOptimizationData = async () => {
+      try {
+        setLoading(true)
+        const dashboardData = await fetchDashboardData()
+        const appliancesData = await fetchAppliancesData()
+        
+        // Update optimization chart from hourly forecast
+        if (dashboardData.hourly_forecast) {
+          const optimizationChart = dashboardData.hourly_forecast.map((item: any) => ({
+            hour: parseInt(item.hour) || 0,
+            current: item.value || 0,
+            optimized: (item.value || 0) * 0.85, // 15% reduction through optimization
+          }))
+          setData(optimizationChart)
+        }
+        
+        // Generate AI-powered recommendations
+        const aiRecommendations = AIInsightsGenerator.generateDeviceRecommendations(appliancesData)
+        
+        // Convert to component format
+        const getIcon = (name: string) => {
+          const lower = name.toLowerCase()
+          if (lower.includes('water') || lower.includes('wh_')) return Droplets
+          if (lower.includes('wash') || lower.includes('wm_')) return Shirt
+          if (lower.includes('dish')) return UtensilsCrossed
+          return Zap
+        }
+        
+        const newRecommendations = aiRecommendations.slice(0, 4).map((rec: string, index: number) => ({
+          id: index + 1,
+          icon: getIcon(rec),
+          name: rec.split(' ').slice(0, 2).join(' '), // First 2 words as name
+          shift: rec, // Full recommendation as shift text
+          color: 'emerald'
+        }))
+        setRecommendations(newRecommendations)
+        
+        setError(null)
+      } catch (err: any) {
+        console.error('Failed to fetch optimization data:', err)
+        setError(err.message || 'Failed to load optimization data')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadOptimizationData()
+    // Refresh every 5 minutes
+    const interval = setInterval(loadOptimizationData, 5 * 60 * 1000)
+    return () => clearInterval(interval)
+  }, [])
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
@@ -75,10 +130,33 @@ export default function OptimizationPage() {
           <Menu className="w-6 h-6 text-emerald-400" />
         </button>
 
+        {/* Loading State */}
+        {loading && (
+          <div className="flex items-center justify-center py-20">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500"></div>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && (
+          <div className="bg-red-500/10 border border-red-500/50 rounded-xl p-4 mb-6">
+            <p className="text-red-400 text-sm">⚠️ {error}</p>
+            <p className="text-red-300/60 text-xs mt-1">Using cached data. Make sure backend is running.</p>
+          </div>
+        )}
+
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 sm:mb-8">
           <div className="w-full sm:w-auto text-center sm:text-left">
-            <h1 className="text-white text-2xl sm:text-3xl font-bold mb-2">Optimization</h1>
+            <h1 className="text-white text-2xl sm:text-3xl font-bold mb-2 flex items-center gap-2 justify-center sm:justify-start">
+              Optimization 
+              {!loading && !error && (
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+              )}
+            </h1>
             <div className="flex items-center justify-center sm:justify-start gap-2 sm:gap-4 flex-wrap">
               {/* Household Dropdown */}
               <button className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-[#0d1221]/50 backdrop-blur-xl border border-white/10 rounded-lg hover:border-emerald-400/30 hover:scale-105 transition-all duration-500 ease-out">

@@ -1,9 +1,11 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts'
 import { Calendar, TrendingUp, Clock, Activity } from 'lucide-react'
+import { fetchForecastData } from '@/lib/api'
 
-// Generate forecast data
+// Generate forecast data (fallback)
 const generateForecastData = () => {
   const data = []
   for (let i = 9; i <= 15; i++) {
@@ -30,19 +32,81 @@ const CustomTooltip = ({ active, payload }: any) => {
 }
 
 export default function Forecast() {
-  const forecastData = generateForecastData()
-  const peakUsagePeriods = [
+  const [forecastData, setForecastData] = useState(generateForecastData())
+  const [peakUsagePeriods, setPeakUsagePeriods] = useState([
     { time: '6 PM - 10 PM', date: '16 Nov', value: '1.85 kW/h' },
     { time: '11 AM - 1 PM', date: '12 Nov', value: '1.73 kW/h' },
     { time: '7 AM - 9 AM', date: '15 Nov', value: '1.65 kW/h' },
-  ]
+  ])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [peakValue, setPeakValue] = useState('1.92')
+
+  useEffect(() => {
+    const loadForecastData = async () => {
+      try {
+        setLoading(true)
+        const data = await fetchForecastData()
+        
+        // Update forecast chart data
+        if (data.forecast_7_days) {
+          setForecastData(data.forecast_7_days)
+        }
+        
+        // Update peak periods
+        if (data.peak_periods) {
+          setPeakUsagePeriods(data.peak_periods)
+        }
+        
+        // Update peak value
+        if (data.peak_value) {
+          setPeakValue(data.peak_value.toFixed(2))
+        }
+        
+        setError(null)
+      } catch (err: any) {
+        console.error('Failed to fetch forecast data:', err)
+        setError(err.message || 'Failed to load forecast data')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadForecastData()
+    // Refresh every 5 minutes
+    const interval = setInterval(loadForecastData, 5 * 60 * 1000)
+    return () => clearInterval(interval)
+  }, [])
 
   return (
     <div className="space-y-4 sm:space-y-6">
+      {/* Loading State */}
+      {loading && (
+        <div className="flex items-center justify-center py-20">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500"></div>
+        </div>
+      )}
+
+      {/* Error State */}
+      {error && (
+        <div className="bg-red-500/10 border border-red-500/50 rounded-xl p-4 mb-6">
+          <p className="text-red-400 text-sm">⚠️ {error}</p>
+          <p className="text-red-300/60 text-xs mt-1">Using cached data. Make sure backend is running.</p>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="text-center sm:text-left w-full sm:w-auto">
-          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Forecast</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2 flex items-center gap-2 justify-center sm:justify-start">
+            Forecast 
+            {!loading && !error && (
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+            )}
+          </h1>
           <div className="flex items-center justify-center sm:justify-start gap-2 sm:gap-4 text-[#6b7b94] text-xs sm:text-sm flex-wrap">
             <span>Household</span>
             <span className="text-[#3d4a5c]">•</span>
@@ -73,7 +137,7 @@ export default function Forecast() {
             </div>
           </div>
           <div className="text-center sm:text-right">
-            <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-1">1.92 <span className="text-base sm:text-lg lg:text-xl text-[#6b7b94]">kWh</span></div>
+            <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-1">{peakValue} <span className="text-base sm:text-lg lg:text-xl text-[#6b7b94]">kWh</span></div>
             <div className="flex items-center justify-center sm:justify-end gap-2 text-[#6b7b94] text-xs sm:text-sm">
               <Activity className="w-3 h-3 sm:w-4 sm:h-4" />
               <span>≈ 6 PM</span>
