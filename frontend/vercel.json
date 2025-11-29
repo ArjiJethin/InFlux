@@ -1,5 +1,10 @@
 {
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
   "framework": "nextjs",
-  "buildCommand": "cd frontend && npm run build",
-  "outputDirectory": "frontend/.next"
+  "env": {
+    "NEXT_PUBLIC_API_URL": "https://influx-backend-q3zp.onrender.com"
+  }
 }
