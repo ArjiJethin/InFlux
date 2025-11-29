@@ -7,9 +7,9 @@ python-dotenv==1.0.0
 pydantic==2.5.3
 pydantic-settings==2.1.0
 
-# Data processing (may show warnings but works)
-pandas==2.2.0
-numpy==1.26.3
+# Data processing
+pandas==2.1.4
+numpy==1.26.2
 
 # Machine Learning (NO TensorFlow - Random Forest only)
 scikit-learn==1.4.0
